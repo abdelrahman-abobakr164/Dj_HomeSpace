@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} {{service.name}} {% endblock title %}
+
+{% block body %}
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title light-background">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Service Details</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><button onclick="history.back()" class='btn'><a>Home</a></button></li>
+            <li class="current">Service Details</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Service Details Section -->
+    <section id="service-details" class="service-details section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row">
+          <div class="col-lg-8">
+            <div class="service-content">
+              <div class="service-hero" data-aos="fade-up" data-aos-delay="150">
+                <img src="{% static 'assets/img/real-estate/property-exterior-8.webp' %}" alt="Property Sales Service" class="img-fluid rounded bi-house">
+                <div class="service-badge">
+                  <i class="bi bi-house-door"></i>
+                  {% if 'Property-Sell' in request.path %}
+                    Property Sell
+                  {% else %}
+                    Property Rental
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="service-process" data-aos="fade-up" data-aos-delay="300">
+                <h3>What we do</h3>
+                <div class="process-steps">
+                  <div class="process-step">
+                    <div class="step-content">
+                      <h5>Initial Consultation</h5>
+                      <p>We meet to discuss your goals, timeline, and property details to create a customized selling strategy.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="sidebar">
+              <div class="contact-form-widget" data-aos="fade-up" data-aos-delay="200">
+                <h4>Get Started Today</h4>
+                <p>Ready to {% if 'Property-Sell' in request.path %} Sell {% else %} Rental{% endif %}  your property? Contact us for a free consultation .</p>
+
+                <form method="POST" id="serviceForm">
+                  {% csrf_token %}
+
+                  <input type="hidden" name="subject" value="Consultation Request">
+                  <div class="row gy-3">
+                    <div class="col-12">
+                      {{form.username.label}}
+                      {{form.username}}
+                      {{form.email.label}}
+                      {{form.email}}
+                      {% if form.email.errors %}
+                        <ul>
+                          {% for errors in form.email.errors %}
+                            <li class='text-danger'>{{ errors }}</li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                      {{form.message.label}}
+                      {{form.message}}
+                    </div>
+                  </div>
+                  <div class="actions-card mb-4" data-aos="fade-up" data-aos-delay="250">
+                    <div class="action-buttons">
+                      <p class="text-danger text-center" id="id_p"></p>
+                      <button type='submit' class="btn btn-primary btn-lg w-100 mb-3">
+                        Send Request
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <div class="quick-info-widget" data-aos="fade-up" data-aos-delay="250">
+                <h4>Quick Facts</h4>
+                <ul class="info-list">
+                  <li>
+                    <i class="bi bi-clock"></i>
+                    <span>Free Initial Consultation</span>
+                  </li>
+                  <li>
+                    <i class="bi bi-shield-check"></i>
+                    <span>Licensed &amp; Insured</span>
+                  </li>
+                  <li>
+                    <i class="bi bi-headset"></i>
+                    <span>24/7 Support</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Service Details Section -->
+
+  </main>
+  
+{% endblock body %}

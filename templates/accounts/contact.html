@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact{% endblock title %}
+
+{% block body %}
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title light-background">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Contact</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><button onclick="history.back()" class='btn'><a>Home</a></button></li>
+            <li class="current">Contact</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Contact 2 Section -->
+    <section id="contact-2" class="contact-2 section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="300">
+          <div class="col-md-12">
+            <div class="contact-info-card">
+              <div class="icon-box">
+                <i class="bi bi-phone"></i>
+              </div>
+              <div class="info-content">
+                <h4>Phone &amp; Email</h4>
+                <p>+20 1096663306</p>
+                <p>abdelrahmanforlearn@gmail.com</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="row justify-content-center mb-5" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-lg-10">
+            <div class="contact-form-wrapper">
+              <h2 class="text-center mb-4">Send a Message</h2>
+
+              <form method="POST" id='contactForm'>
+                {% csrf_token %}
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <input type="email" class="form-control" name="email" required placeholder="Email Address" >
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="form-group">
+                      <textarea class="form-control" name="message" required placeholder="Your Message" rows="6" ></textarea>
+                    </div>
+                  </div>
+
+                  <div class="col-12 text-center">
+                    <p class="text-danger" id="id_p"></p>
+                    <button type="submit" class="btn-submit">SEND MESSAGE</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Contact 2 Section -->
+
+  </main>
+
+{% endblock body %}

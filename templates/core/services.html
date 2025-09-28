@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Services{% endblock title %}
+
+{% block body %}
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title light-background">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Services</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><button onclick="history.back()" class='btn'><a>Home</a></button></li>
+            <li class="current">Services</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Services Section -->
+    <section id="services" class="services section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-5">
+
+          <div class="col-xl-12" data-aos="fade-right" data-aos-delay="200">
+            <div class="service-block">
+              <div class="service-content">
+                <div class="d-flex">
+                  <div class="service-number">01</div>
+                  <h4 class='ms-2 mt-3'>Buy Or Rent Your Dream Home</h4>
+                </div>
+                <div class="service-info mt-2">
+                  <a href="{% url 'properties' %}" class="service-btn">
+                    Start Your Search <i class="bi bi-arrow-right"></i>
+                  </a>
+                </div>
+              </div>
+              <div class="service-image">
+                <img src="{% static 'assets/img/real-estate/property-exterior-3.webp' %}" alt="Buy Dream Home" class="img-fluid">
+                <div class="image-overlay">
+                  <i class="bi bi-house-heart"></i>
+                </div>
+              </div>
+            </div>
+          </div><!-- End Service Block -->
+
+          <div class="col-xl-12" data-aos="fade-left" data-aos-delay="300">
+            <div class="service-block">
+              <div class="service-content">
+                <div class="d-flex">
+                <div class="service-number">02</div>
+                  <h4 class='ms-2 mt-3'>Sell</h4>
+                </div>
+                <div class="service-info">
+                  <a href="{% url 'service' 'Property-Sell' %}" class="service-btn">
+                    Get Valuation <i class="bi bi-arrow-right"></i>
+                  </a>
+                </div>
+              </div>
+              <div class="service-image">
+                <img src="{% static 'assets/img/real-estate/property-exterior-2.webp' %}" alt="Sell Property" class="img-fluid">
+                <div class="image-overlay">
+                  <i class="bi bi-currency-dollar"></i>
+                </div>
+              </div>
+            </div>
+          </div><!-- End Service Block -->
+
+          <div class="col-xl-12" data-aos="fade-right" data-aos-delay="400">
+            <div class="service-block">
+              <div class="service-content">
+                <div class="d-flex">
+                  <div class="service-number">03</div>
+                  <h4  class='ms-2 mt-3'>Renting</h4>
+                </div>
+                <div class="service-info">
+                  <a href="{% url 'service' 'Property-Rental' %}" class="service-btn">
+                    Get Valuation <i class="bi bi-arrow-right"></i>
+                  </a>
+                </div>
+              </div>
+              <div class="service-image">
+                <img src="{% static 'assets/img/real-estate/property-interior-5.webp' %}" alt="Premium Rentals" class="img-fluid">
+                <div class="image-overlay">
+                  <i class="bi bi-key"></i>
+                </div>
+              </div>
+            </div>
+          </div><!-- End Service Block -->
+
+        </div>
+
+        <div class="row">
+          <div class="col-lg-12" data-aos="fade-up" data-aos-delay="600">
+            <div class="cta-section">
+              <div class="cta-content">
+                <h3>Ready to Make Your Move?</h3>
+                <p>Connect with our team today and discover how we can help you achieve your real estate goals.</p>
+                <div class="cta-buttons">
+                  <a href="{% url 'contact-us' %}" class="btn-primary">Contact Us Today</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- /Services Section -->
+
+  </main>
+{% endblock body %}

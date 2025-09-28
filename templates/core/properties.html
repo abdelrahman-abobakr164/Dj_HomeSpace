@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %} Properties {% endblock title %}
+
+
+{% block body %}
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title light-background">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Properties</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><button onclick="history.back()" class='btn'><a>Home</a></button></li>
+            <li class="current">Properties</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Properties Section -->
+    <section id="properties" class="properties section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="search-bar mb-5" data-aos="fade-up" data-aos-delay="150">
+          <div class="row justify-content-center">
+            <div class="col-lg-10">
+              <div class="search-wrapper">
+                <form>
+                  <div class="row g-3">
+                    <div class="col-lg-2 col-md-6">
+                      <div class="search-field">
+                        <label>Location</label>
+                        <input type="text" name='location' class="form-control" placeholder="Address">
+                      </div>
+                    </div>
+                    
+                    <div class="col-lg-2 col-md-6">
+                      <div class="search-field">
+                        <label>For?</label>
+                        <select class="form-select" name="for">
+                          <option selected value="">All</option>
+                            <option value='for-rent'>For Rent</option>
+                            <option value='for-sale' >For Sale</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="col-lg-2 col-md-6">
+                      <div class="search-field">
+                        <label>Property Type</label>
+                        <select class="form-select" name="property_type">
+                          <option selected value="">All Types</option>
+                          {% for i in categories %}
+                            <option value='{{i.id}}' >{{ i.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-6">
+                      <div class="search-field">
+                        <label>Bedrooms</label>
+                        <select class="form-select" name="bedrooms">
+                          <option selected value="">All</option>
+                          {% for i in "12345" %}
+                            <option value='{{i}}' >{{ i }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-6">
+                      <div class="search-field">
+                        <label>Bathrooms</label>
+                        <select class="form-select" name="bathrooms">
+                          <option selected value="">All</option>
+                          {% for i in "12345" %}
+                            <option value='{{i}}' >{{ i }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-12">
+                      <div class="search-field">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary w-100 search-btn">
+                          <i class="bi bi-search"></i> Search
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-header mb-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="row align-items-center">
+            <div class="col-lg-12">
+              <div class="results-info">
+                <h5>{{ all_properties|length }} Properties Found</h5>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="properties-container">
+
+          <div class="properties-masonry view-masonry active" data-aos="fade-up" data-aos-delay="250">
+            <div class="row g-4">
+              
+              {% for i in page_obj %}
+                <div class="col-lg-4 col-md-6">
+                  <div class="property-item">
+                    <a href="{% url 'property' i.id %}" class="property-link">
+                      <div class="property-image-wrapper">
+                        <img src="{{ i.main_image.url }}" alt="Modern Apartment" class="img-fluid">
+                        <div class="property-status">
+                          {% if i.rent %}
+                          <span class="status-badge rent">For Rent</span>
+                          {% elif i.discount_price %}
+                          <span class="status-badge reduced">Price Reduced</span>
+                          <span class="status-badge sale">For Sale</span>
+                          {% else %}
+                          <span class="status-badge sale">For Sale</span>
+
+                        {% endif %}
+                        </div>
+                      </div>
+                    </a>
+                    <div class="property-details"><a href="{% url 'property' i.id %}" class="property-link">
+                        <div class="property-header">
+                          {% if i.discount_price %}
+                          <div class="property-price">${{ i.discount_price|intcomma }} <span class="old-price">${{ i.price|intcomma }}</span></div>
+                          {% elif i.rent %}
+                          <div class="property-price">${{ i.rent|intcomma }}<span>/month</span></div>
+                          {% else %}
+                          <div class="property-price">${{ i.price|intcomma }}</div>
+                          {% endif %}
+                          <div class="property-type">{{ i.category.name }}</div>
+                        </div>
+                        <h4 class="property-title">{{ i.name }}</h4>
+                        <p class="property-address">
+                          <i class="bi bi-geo-alt"></i>
+                          {{ i.address }}
+                        </p>
+                        <div class="property-specs">
+                          <div class="spec-item">
+                            <i class="bi bi-house-door"></i>
+                            <span>{{ i.bedrooms }} Bedrooms</span>
+                          </div>
+                          <div class="spec-item">
+                            <i class="bi bi-droplet"></i>
+                            <span>{{ i.bathrooms }} Bathrooms</span>
+                          </div>
+                          <div class="spec-item">
+                            <i class="bi bi-arrows-angle-expand"></i>
+                            <span>{{ i.meter|intcomma }} sq ft</span>
+                          </div>
+                        </div>
+                      </a>
+                    </div>
+
+                  </div>
+                </div><!-- End Property Item -->
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <nav class="pagination-wrapper mt-5" data-aos="fade-up" data-aos-delay="350">
+          <div class="row justify-content-between align-items-center">
+            {% if page_obj.has_other_pages %}
+            <div class="col-lg-7">
+              <ul class="pagination justify-content-lg-end">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{page_obj.previous_page_number}}">
+                      <i class="bi bi-chevron-left"></i>
+                    </a>
+                  </li>
+                {% endif %}
+
+                {% for i in custom_page_range %}
+                  <li class="page-item {% if page_obj.number ==  i %} active {% endif %}"><a class="page-link" href="?page={{i}}">{{i}}</a></li>
+                {% endfor %}
+
+                {% if page_obj.number < page_obj.paginator.num_pages %}
+                  {% if page_obj.number == custom_pagi %}
+                    <li class="page-item"><a class="page-link">...</a></li>
+                    <li class="page-item {% if page_obj.number ==  i %} active {% endif %}"><a class="page-link" href="?page={{page_obj.paginator.num_pages}}">{{page_obj.paginator.num_pages}}</a></li>
+                  {% endif %}
+                {% endif %}
+
+                
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{page_obj.next_page_number}}">
+                      <i class="bi bi-chevron-right"></i>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </div>
+            {% endif %}
+
+          </div>
+        </nav>
+
+      </div>
+
+    </section><!-- /Properties Section -->
+
+  </main>
+
+{% endblock body %}

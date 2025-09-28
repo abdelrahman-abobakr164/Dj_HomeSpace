@@ -1,0 +1,468 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %} HomeSpace {% endblock title %}
+
+{% block body %}
+
+  <main class="main">
+
+    <section id="hero" class="hero section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="hero-wrapper">
+          <div class="row g-4">
+
+            <div class="col-lg-7">
+              <div class="hero-content" data-aos="zoom-in" data-aos-delay="200">
+                <div class="content-header">
+                  <span class="hero-label">
+                    <i class="bi bi-house-heart"></i>
+                    Dream Homes Await
+                  </span>
+                  <h1 style='margin-bottom:-1px'>Find Or Publish</h1>
+                  <h1>Your Ideal Property</h1>
+                </div>
+
+                <div class="search-container" data-aos="fade-up" data-aos-delay="300">
+                  <div class="search-header">
+                    <h3>Start Your Property Search</h3>
+                    <p>Discover {{ps.count}} of verified listings</p>
+                  </div>
+
+                  <form action="{% url 'properties' %}" class="property-search-form">
+                      <div class="search-field col-12">
+                        <label for="search-type" class="field-label">For?</label>
+                        <select id="search-type" name="for">
+                          <option selected value="">All</option>
+                            <option value="for-rent">For Rent</option>
+                            <option value="for-sale">For Sale</option>
+                        </select>
+                        <i class="bi bi-building field-icon"></i>
+                      </div><br>
+
+                    <div class="search-grid">
+                      <div class="search-field">
+                        <label for="search-location" class="field-label">Location</label>
+                        <input type="text" id="search-location" name="location" placeholder="Enter Address">
+                        <i class="bi bi-geo-alt field-icon"></i>
+                      </div>
+
+                      <div class="search-field">
+                        <label for="search-type" class="field-label">Property Type</label>
+                        <select id="search-type" name="property_type">
+                          <option selected value="">All Types</option>
+                          {% for i in categories %}
+                            <option value="{{ i.id }}">{{ i.name }}</option>
+                          {% endfor %}
+                        </select>
+                        <i class="bi bi-building field-icon"></i>
+                      </div>
+
+                      <div class="search-field">
+                        <label for="search-budget" class="field-label">Budget Start Range</label>
+                        <input type="number" min='1' name="min_price_range" id="">
+                        <i class="bi bi-currency-dollar field-icon"></i>
+                      </div>
+
+                      <div class="search-field">
+                        <label for="search-budget" class="field-label">Budget End Range</label>
+                        <input type="number" min='1' name="max_price_range" id="">
+                        <i class="bi bi-currency-dollar field-icon"></i>
+                      </div>
+
+                      <div class="search-field">
+                        <label for="search-rooms" class="field-label">Bedrooms</label>
+                        <select id="search-rooms" name="bedrooms">
+                          <option value="">All</option>
+                          {% for i in '12345' %}
+                            <option value="{{i}}">{{i}} Room</option>
+                          {% endfor %}
+                        </select>
+                        <i class="bi bi-door-open field-icon"></i>
+                      </div>
+
+                      <div class="search-field">
+                        <label for="search-rooms" class="field-label">Bathrooms</label>
+                        <select id="search-rooms" name="bathrooms">
+                          <option value="">All</option>
+                          {% for i in '12345' %}
+                            <option value="{{i}}">{{i}} Room</option>
+                          {% endfor %}
+                        </select>
+                        <i class="bi bi-door-open field-icon"></i>
+                      </div>
+                    </div>
+
+                    <button type="submit" class="search-btn">
+                      <i class="bi bi-search"></i>
+                      <span>Find Properties</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div><!-- End Hero Content -->
+
+            <div class="col-lg-5">
+              <div class="hero-visual" data-aos="fade-left" data-aos-delay="400">
+                <div class="visual-container">
+                  <div class="featured-property">
+                    <img src="{% static 'assets/img/real-estate/property-exterior-8.webp' %}" alt="Featured Property" class="img-fluid">
+                  </div>
+
+                  <div class="overlay-images">
+                    <div class="overlay-img overlay-1">
+                      <img src="{% static 'assets/img/real-estate/property-interior-4.webp' %}" alt="Interior View" class="img-fluid">
+                    </div>
+                    <div class="overlay-img overlay-2">
+                      <img src="{% static 'assets/img/real-estate/property-exterior-2.webp' %}" alt="Exterior View" class="img-fluid">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Hero Visual -->
+
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Hero Section -->
+
+    <!-- Home About Section -->
+    <section id="home-about" class="home-about section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-5">
+
+          <div class="col-lg-5" data-aos="zoom-in" data-aos-delay="200">
+            <div class="image-gallery">
+              <div class="primary-image">
+                <img src="{% static 'assets/img/real-estate/property-exterior-1.webp' %}" alt="Modern Property" class="img-fluid">
+              </div>
+              <div class="secondary-image">
+                <img src="{% static 'assets/img/real-estate/property-interior-4.webp' %}" alt="Luxury Interior" class="img-fluid">
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7" data-aos="fade-left" data-aos-delay="300">
+            <div class="content">
+              <div class="section-header">
+                <span class="section-label">About Our Company</span>
+                <h2>Building Dreams, Sell and Rented Homes Since 2025</h2>
+              </div>
+
+              <p>A real estate website is an online platform where users can browse, buy, sell, or rent properties.
+              It typically features property listings with photos, prices, and detailed descriptions.
+              Advanced search filters (location, price range, property type) help users find suitable options easily.
+              Some sites include virtual tours, maps, and neighborhood insights for better decision-making.
+              Agents and agencies can showcase their listings and connect with potential clients.
+              Overall, it streamlines property discovery and transactions in the real estate market.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section><!-- /Home About Section -->
+
+    <!-- Featured Properties Section -->
+    <section id="featured-properties" class="featured-properties section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Featured Properties</h2>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-5">
+          
+          {% if premium %}
+            {% for p in premium %}
+              <div class="col-lg-8">
+                <div class="featured-property-main" data-aos="zoom-in" data-aos-delay="200">
+                  <div class="property-hero">
+                    <img src="{{ p.main_image.url }}" alt="Luxury Estate" class="img-fluid">
+                    <div class="property-overlay">
+                      <div class="property-badge-main premium">Premium</div>
+                      <div class="property-stats">
+                        <div class="stat-item">
+                          <i class="bi bi-house-door"></i>
+                          <span>{{ p.bedrooms }} Bedrooms</span>
+                        </div>
+                        <div class="stat-item">
+                          <i class="bi bi-droplet-fill"></i>
+                          <span>{{ p.bathrooms }} Bathrooms</span>
+                        </div>
+                        <div class="stat-item">
+                          <i class="bi bi-arrows-move"></i>
+                          <span>{{ p.meter|intcomma }} sq ft</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="property-hero-content">
+                    <div class="property-header">
+                      <div class="property-info">
+                        <h2><a href="{% url 'property' p.id %}">{{ p.name }}</a></h2>
+                        <div class="property-address">
+                          <i class="bi bi-geo-alt-fill"></i>
+                          <span> {{ p.address }}</span>
+                        </div>
+                      </div>
+                      <div class="property-price-main">${{ p.price|intcomma }}</div>
+                    </div>
+                    <p class="property-description">{{p.description}}</p>
+                    <div class="property-actions-main">
+                      <a href="{% url 'property' p.id %}" class="btn-primary-custom">Schedule Tour</a>
+                      <div class="property-listing-info">
+                        <span class="listing-status for-sale">For Sale</span>
+                        <span class="listing-date">Listed, {{ p.published_at|date:'M d o' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <div class="col-lg-4">
+
+            <div class="properties-sidebar">
+              
+              {% for p in disproperties %}
+                <div class="sidebar-property-card" data-aos="fade-left" data-aos-delay="300">
+                  <div class="sidebar-property-image">
+                    <img src="{{ p.main_image.url }}" alt="Modern Condo" class="img-fluid">
+                    <div class="sidebar-property-badge hot">Hot Deal</div>
+                  </div>
+                  <div class="sidebar-property-content">
+                    <h4><a href="{% url 'property' p.id %}">{{ p.name }}</a></h4>
+                    <div class="sidebar-location">
+                      <i class="bi bi-pin-map"></i>
+                      <span> {{ p.address }}</span>
+                    </div>
+                    <div class="sidebar-specs">
+                      <span><i class="bi bi-house"></i> {{ p.bedrooms }} BR</span>
+                      <span><i class="bi bi-droplet"></i> {{ p.bathrooms }} BA</span>
+                      <span><i class="bi bi-rulers"></i> {{ p.meter|intcomma }} sq ft</span>
+                    </div>
+                    <div class="sidebar-price-row">
+                      <div class="sidebar-price">${{ p.discount_price|intcomma }}</div>
+                      <a href="{% url 'property' p.id %}" class="sidebar-btn">View</a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+
+              {% for p in properties %}
+                <div class="sidebar-property-card" data-aos="fade-left" data-aos-delay="400">
+                  <div class="sidebar-property-image">
+                    <img src="{{ p.main_image.url }}" alt="Family Home" class="img-fluid">
+                    <div class="sidebar-property-badge new">New For Sale</div>
+                  </div>
+                  <div class="sidebar-property-content">
+                    <h4><a href="{% url 'property' p.id %}">{{ p.name }}</a></h4>
+                    <div class="sidebar-location">
+                      <i class="bi bi-pin-map"></i>
+                      <span>{{ p.address }}</span>
+                    </div>
+                    <div class="sidebar-specs">
+                      <span><i class="bi bi-house"></i> {{ p.bedrooms }} BR</span>
+                      <span><i class="bi bi-droplet"></i> {{ p.bathrooms }} BA</span>
+                      <span><i class="bi bi-rulers"></i> {{ p.meter|intcomma }} sq ft</span>
+                    </div>
+                    <div class="sidebar-price-row">
+                      <div class="sidebar-price">${{ p.price|intcomma }}</div>
+                      <a href="{% url 'property' p.id %}" class="sidebar-btn">View</a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+          </div>
+
+        </div>
+        
+        {% if rental %}
+          <div class="row gy-4 mt-4">
+            {% for p in rental %}
+              <div class="col-xl-6" data-aos="fade-up" data-aos-delay="600">
+                <div class="property-card-horizontal">
+                  <div class="property-image-horizontal">
+                    <img src="{{ p.main_image.url }}" alt="Penthouse" class="img-fluid">
+                    <div class="property-badge-horizontal new">New For Rent</div>
+                  </div>
+                  <div class="property-content-horizontal">
+                    <h3><a href="{% url 'property' p.id %}">{{ p.name }}</a></h3>
+                    <div class="property-location-horizontal">
+                      <i class="bi bi-geo-alt"></i>
+                      <span>{{ p.address }}</span>
+                    </div>
+                    <div class="property-features">
+                      <span class="feature"><i class="bi bi-house"></i> {{ p.bedrooms }} Bedrooms</span>
+                      <span class="feature"><i class="bi bi-droplet"></i> {{ p.bathrooms }} Bathrooms</span>
+                      <span class="feature"><i class="bi bi-rulers"></i> {{ p.meter|intcomma }} sq ft</span>
+                    </div>
+                    <p>{{ p.description }}</p>
+                    <div class="property-footer-horizontal">
+                      <div class="property-price-horizontal">${{ p.rent|intcomma }}</div>
+                      <a href="{% url 'property' p.id %}" class="btn-view-horizontal">View Details</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="text-center" data-aos="zoom-in" data-aos-delay="600">
+          <a href="{% url 'properties' %}" class="btn-view-all">
+            <span>View All Properties</span>
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+      </div>
+
+    </section><!-- /Featured Properties Section -->
+
+    <!-- Featured Services Section -->
+    <section id="featured-services" class="featured-services section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Featured Services</h2>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row g-4">
+
+          <div class="col-lg-12" data-aos="fade-right" data-aos-delay="200">
+            <div class="service-card">
+              <div class="service-icon">
+                <i class="bi bi-search"></i>
+              </div>
+              <div class="service-info">
+                <h3><a href="{% url 'properties' %}">Property Search</a></h3>
+                <ul class="service-highlights">
+                  <li><i class="bi bi-check-circle-fill"></i> Comprehensive Listings</li>
+                  <li><i class="bi bi-check-circle-fill"></i> Advanced Filtering</li>
+                  <li><i class="bi bi-check-circle-fill"></i> Virtual Tours</li>
+                </ul>
+                <a href="{% url 'properties' %}" class="service-link">
+                  <span>Explore Now</span>
+                  <i class="bi bi-arrow-up-right"></i>
+                </a>
+              </div>
+              <div class="service-visual">
+                <img src="{% static 'assets/img/real-estate/property-interior-2.webp' %}" class="img-fluid" alt="Property Search" loading="lazy">
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+        </div>
+
+        <div class="text-center" data-aos="zoom-in" data-aos-delay="600">
+          <a href="{% url 'services' %}" class="btn-view-all">
+            <span>View All Services</span>
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+      </div>
+
+    </section><!-- /Featured Services Section -->
+
+    <!-- Why Us Section -->
+    <section id="why-us" class="why-us section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Why Us</h2>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-8 mx-auto" data-aos="fade-right" data-aos-delay="200">
+            <div class="content">
+
+              <div class="features-list">
+                <div class="feature-item d-flex align-items-center mb-3">
+                  <div class="icon-wrapper me-3">
+                    <i class="bi bi-shield-check"></i>
+                  </div>
+                  <div>
+                    <h5>Verified Listings Only</h5>
+                    <p>Every property is thoroughly vetted and verified before listing to ensure accuracy and quality.</p>
+                  </div>
+                </div>
+
+                <div class="feature-item d-flex align-items-center mb-3">
+                  <div class="icon-wrapper me-3">
+                    <i class="bi bi-headset"></i>
+                  </div>
+                  <div>
+                    <h5>24/7 Client Support</h5>
+                    <p>Our dedicated support team is available around the clock to assist with your real estate needs.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Why Us Section -->
+
+    <!-- Call To Action Section -->
+    <section class="call-to-action-1 call-to-action section" id="call-to-action">
+      <div class="cta-bg" style="background-image: url('{% static 'assets/img/real-estate/showcase-3.webp' %}');"></div>
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row justify-content-center">
+          <div class="col-xl-6 col-lg-8">
+
+            <div class="cta-content text-center">
+              <h2>Need Help To Finding Your Dream Property?</h2>
+
+              <div class="cta-buttons">
+                <a href="{% url 'contact-us' %}" class="btn btn-primary">Contact Us Today</a>
+              </div>
+
+              <div class="cta-features">
+                <div class="feature-item" data-aos="fade-up" data-aos-delay="200">
+                  <i class="bi bi-phone-fill"></i>
+                  <span>Free Consultation</span>
+                </div>
+                <div class="feature-item" data-aos="fade-up" data-aos-delay="250">
+                  <i class="bi bi-clock-fill"></i>
+                  <span>24/7 Support</span>
+                </div>
+                <div class="feature-item" data-aos="fade-up" data-aos-delay="300">
+                  <i class="bi bi-shield-check-fill"></i>
+                  <span>Trusted Experts</span>
+                </div>
+              </div>
+
+            </div><!-- End CTA Content -->
+
+          </div>
+        </div>
+
+      </div>
+    </section><!-- /Call To Action Section -->
+
+  </main>
+
+{% endblock body %}

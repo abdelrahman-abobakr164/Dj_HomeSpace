@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Add Property
+{% endblock title %}
+
+{% block body %}
+    <style>
+        #suggestions li{
+            list-style: none;
+            cursor: pointer;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        #suggestions li:hover{
+            background-color: #f0f0f0;
+        }
+    </style>
+    <section id="terms-of-service">
+        <div class="container" data-aos="fade-up">
+            <div class="tos-content" data-aos="fade-up" data-aos-delay="200">
+                <div class="row">
+                    <div class="col-6 mx-auto ">
+                        <h2>
+                        <button onclick="history.back()" class="btn "><i class="font-sm bi-arrow-left"></i> Back</button>
+                        {% if get_property %}
+                            Edit Your Property
+                        {% else %}
+                            Add your Own Property
+                        {% endif %}
+                        </h2><br>             
+                        <form method='POST' id="propertyForm" enctype='multipart/form-data'>
+                            {% csrf_token %}
+                            
+                            {% if form.errors %}
+                                <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                    <li class='text-danger'>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                            <label for="property_type" class='mb-1' style='margin-left:25px'>Property Type:</label>
+                            <div class="form-group icon-input mb-3 d-flex">
+                                <i class="font-sm bi-house text-grey-500 me-1 mb-1 mt-2"></i>
+                                <select name="property_type" id="property_type" class='form-control'>
+                                    <option selected value="for-sale" {% if get_property and get_property.property_type == 'For Sale' %} selected {% endif %}>For Sale</option>
+                                    <option value="for-rent" {% if get_property and get_property.property_type == 'For Rent' %} selected {% endif %}>For Rent</option>
+                                </select>
+                            </div>
+
+                            <label for="id_category" class='mb-1' style='margin-left: 25px'>Building Type:</label>
+                            <div class="form-group icon-input mb-3 d-flex">
+                                <i class="font-sm bi-house text-grey-500 me-1 mb-1 mt-2"></i>
+                                {{form.category}}
+                            </div>
+
+                            <label for="id_name" style='margin-left: 25px'>Name:</label>
+                            <div class="form-group icon-input mb-3 d-flex">
+                                <i class="font-sm bi-house text-grey-500 me-1 mb-1 mt-2"></i>
+                                {{form.name}}
+                            </div>
+
+                            <label for="id_available_at" style='margin-left: 25px'>Available At:</label>
+                            <div class="form-group icon-input mt-1 d-flex">
+                                <i class="font-sm bi-calendar text-grey-500 me-1 mt-2"></i>
+                                {{form.available_at}}
+                            </div>
+                            <p class="form-text mb-3 text-muted" style='margin-left: 25px'>Make Sure Your Date is in Future</p>
+
+                            {% if not get_property %}
+                                <div class="form-group icon-input mb-3">
+                                    <i class="font-sm bi-image text-grey-500 me-1 mt-2"></i>
+                                    <label for="id_main_image">Main Photo/Video:</label>
+                                    {{form.main_image}}
+                                </div>
+                            {% endif %}
+
+                            <div class="form-group mb-0 w-100">
+                                <i class="font-sm bi-image text-grey-500 me-1 mt-2"></i>
+                                <label for="file">Property Images:</label>
+                                <input type="file" multiple='true' name="images" id="file" class="input-file" >
+                                <label for="file" class="rounded-3 text-center bg-white btn-tertiary js-labelFile p-4 w-100 border-dashed">
+                                    <i class="ti-cloud-down large-icon me-3 d-block"></i>
+                                    <span class="js-fileName">Drag and drop or click Your Property Images</span>
+                                </label>
+                            </div>
+
+                            <label for="id_address" class='mb-1' style='margin-left: 25px'>Address:</label>
+                            <div class="form-group icon-input mb-3 d-flex">
+                                <i class="bi-geo-alt text-grey-500 me-1 mt-2"></i>
+                                <div style="position: relative; flex: 1;">
+                                    {{form.address}}
+                                    <ul id="suggestions" style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 1000; background-color: #fff; border: 1px solid #ccc; margin: 0; padding: 0; list-style: none; max-height: 220px; overflow-y: auto; display: none;"></ul>
+                                </div>
+                                <input type="hidden" id="lat" name="latitude">
+                                <input type="hidden" id="lng" name="longitude">
+                            </div>
+                            
+                            <label for="id_bathrooms" style='margin-left: 25px'>Bathrooms:</label>
+                            <label for="id_bedrooms" class='mb-1' style='margin-left: 182px'>Bedrooms:</label>
+                            <div class="form-group icon-input mb-3 d-flex">
+                                <i class="font-sm bi-house ms-1 text-grey-500 me-1 mt-2"></i>
+                                {{form.bathrooms}}
+                                {{form.bedrooms}}
+                            </div>
+
+                            <label for="id_meter" class='mb-1' style='margin-left: 160px'>meter:</label>
+                            <div class="form-group col-6 mx-auto icon-input mb-3 d-flex">
+                                <i class="font-sm bi-arrows-angle-expand text-grey-500 me-1 mt-2"></i>
+                                {{form.meter}}
+                            </div>
+                            
+                            <div id="rentFields">
+                                <label for="id_rent" style='margin-left: 25px'>Rent:</label>
+                                <label for="id_security_deposit" class='mb-1' style='margin-left: 225px'>Security Deposit:</label>
+                                <div class="form-group icon-input mb-3 d-flex">
+                                    <i class="bi-currency-dollar text-grey-500 me-1 mt-2"></i>
+                                    {{form.rent}}
+                                    {{form.security_deposit}}
+                                </div>
+                            </div>
+
+                            <div id="priceField">
+                                <label for="id_price" style='margin-left: 25px'>Price:</label>
+                                <div class="form-group icon-input mb-3 d-flex">
+                                    <i class="bi-currency-dollar text-grey-500 me-1 mt-2"></i>
+                                    {{form.price}}
+                                </div>
+                            </div>
+
+                            <div class="form-group icon-input mb-4">
+                                {{form.interior_features.label}}: 
+                                {{form.interior_features}}
+                                <p class="form-text text-muted">Press Ctrl to Multible Select</p>
+                            </div>
+
+                            <div class="form-group icon-input mb-4">
+                                {{form.building_amenities.label}}: 
+                                {{form.building_amenities}}
+                                <p class="form-text text-muted">Press Ctrl to Multible Select</p>
+                            </div>
+
+                            <div class="form-group icon-input mb-3">
+                                {{form.description.label}}: 
+                                {{form.description}}
+                            </div>
+                            <p class="text-danger text-center" id="id_p"></p>
+                            <button type="submit" class="btn btn-dark w-100">Submit</button>
+                        </form>
+
+                    </div>
+                </div>  
+            </div>
+        </div>
+    </section>
+{% endblock body %}
+
+{% block script %}
+
+    <script>
+        const API_KEY = "pk.77f7b5a811e3a1a53fb30c6366af93e6"; 
+        const addressInput = document.getElementById("id_address");
+        const suggestions = document.getElementById("suggestions");
+        const propertyTypeSelect = document.getElementById('property_type');
+        const rentFields = document.getElementById('rentFields');
+        const securityDepositFields = document.getElementById('securityDepositFields');
+        const priceField = document.getElementById('priceField');
+
+        async function fetchSuggestions(query) {
+            const url = `https://us1.locationiq.com/v1/autocomplete?key=${API_KEY}&q=${encodeURIComponent(query)}&limit=5&countrycodes=eg`; 
+            const res = await fetch(url);
+            return res.json();
+        }
+
+        addressInput.addEventListener("input", async () => {
+            const query = addressInput.value;
+            if (query.length < 3) {
+                suggestions.innerHTML = "";
+                suggestions.style.display = "none";
+                return;
+            }
+
+            const results = await fetchSuggestions(query);
+            suggestions.innerHTML = "";
+            results.forEach(place => {
+                const li = document.createElement("li");
+                li.textContent = place.display_name;
+                li.style.cursor = "pointer";
+                li.onclick = () => {
+                    addressInput.value = place.display_name;
+                    document.getElementById("lat").value = place.lat;
+                    document.getElementById("lng").value = place.lon;
+                    suggestions.innerHTML = "";
+                    suggestions.style.display = "none";
+                };
+                suggestions.appendChild(li);
+            });
+            suggestions.style.display = results.length ? "block" : "none";
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!suggestions.contains(event.target) && event.target !== addressInput) {
+                suggestions.innerHTML = "";
+                suggestions.style.display = "none";
+            }
+        });
+
+        function togglePriceRent() {
+            const value = propertyTypeSelect ? propertyTypeSelect.value : null;
+            if (value === 'for-rent') {
+                if (rentFields) rentFields.style.display = '';
+                if (securityDepositFields) securityDepositFields.style.display = '';
+                if (priceField) priceField.style.display = 'none';
+            } else {
+                if (rentFields) rentFields.style.display = 'none';
+                if (securityDepositFields) securityDepositFields.style.display = 'none';
+                if (priceField) priceField.style.display = '';
+            }
+        }
+
+        if (propertyTypeSelect) {
+            propertyTypeSelect.addEventListener('change', togglePriceRent);
+            // Initialize on load
+            togglePriceRent();
+        }
+    </script>
+
+{% endblock script %}

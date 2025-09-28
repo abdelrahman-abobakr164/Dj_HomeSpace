@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Add Property
+{% endblock title %}
+
+{% block body %}
+    <style>
+        #suggestions li{
+            list-style: none;
+            cursor: pointer;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        #suggestions li:hover{
+            background-color: #f0f0f0;
+        }
+    </style>
+    <section id="terms-of-service">
+        <div class="container" data-aos="fade-up">
+            <div class="tos-content" data-aos="fade-up" data-aos-delay="200">
+                <div class="row">
+                    <div class="col-6 mx-auto ">
+                        <h2>
+                        <button onclick="history.back()" class="btn "><i class="font-sm bi-arrow-left"></i> Back</button>
+                        Add Phone Number for Security
+                        </h2><br>
+                        <form method='POST' id="phoneForm" enctype='multipart/form-data'>
+                            {% csrf_token %}
+                            
+                            <label for="id_phone" style='margin-left: 25px'>Phone Number:</label>
+                            <div class="form-group icon-input mb-3 d-flex">
+                                <i class="bi-phone text-grey-500 me-1 mt-2"></i>
+                                {{form.phone}} <br> <br>
+                            </div>
+                            
+                            {% if form.phone.errors %}
+                                <ul>
+                                    {% for errors in form.phone.errors %}
+                                        <li class='text-danger'>{{ errors }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                            <p class="text-danger text-center" id="id_p"></p>
+                            <p class="text-danger text-center" id="id_p"></p>
+                            <button type="submit" class="btn btn-dark w-100">Submit</button>
+                        </form>
+
+                    </div>
+                </div>  
+            </div>
+        </div>
+    </section>
+{% endblock body %}

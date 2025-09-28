@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Scheduled Viewing{% endblock title %}
+
+{% block body %}
+
+  <main class="main">
+
+    <div class="page-title light-background">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Scheduled Viewing</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><a href='/' class='btn'>Home</a></li>
+            <li class="current">Scheduled Viewing</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <section id="contact-2" class="contact-2 section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="row justify-content-center mb-5" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-lg-12">
+            <div class="contact-form-wrapper">
+            <h2 class="text-center">Scheduled Viewing</h2>
+
+            <div class="search-bar mb-5" data-aos="fade-up" data-aos-delay="150">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="search-wrapper">
+                            <form method='GET'>
+                                <div class="row g-3">
+                                    <div class="col-lg-5 col-md-6">
+                                        <div class="search-field">
+                                            <label>STATUS</label>
+                                            <select class="form-select" name="status">
+                                                <option selected value="">All</option>
+                                                <option value="Pending">Pending</option>
+                                                <option value="Accepted">Accepted</option>
+                                                <option value="Refused" >Refused</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-5 col-md-6">
+                                        <div class="search-field">
+                                            <label>DATE</label>
+                                            <select class="form-select" name="date">
+                                                <option selected value="">All</option>
+                                                {% for i in schedules %}
+                                                    <option value='{{i.schedule_date|date:"o-m-d"}}' >{{ i.schedule_date|date:'M d' }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-2 col-md-12">
+                                        <div class="filter-field">
+                                            <label>&nbsp;</label>
+                                            <button class="btn btn-primary w-100 filter-btn"><i class="bi bi-search"></i> FILTER</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+              <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>PROPERTY</th>
+                        <th>ON</th>
+                        <th>SUBJECT</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                {% for i in schedules %}
+                    <tbody>
+                        </tr>
+                            <td> <a href="{% url 'property' i.properties.id %}"><img src="{{i.properties.main_image.url}}" style='max-height:170px; width:170px;' class=' mb-4' alt=""></a></td>
+                            <td><h5><a class='text-dark' href="{% url 'property' i.properties.id %}">{{i.properties.name}} </a></h5></td>
+                            <td>{{i.schedule_date}}</td>
+                            <td><h5>{{i.subject}}</h5></td>
+                            <td>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <button type="button" class='btn btn-danger' data-bs-toggle='modal' 
+                                    data-bs-target="#refuseModal" 
+                                    data-bs-id="{{i.id}}"
+                                    data-bs-url='{% url "scheduled-viewing" %}' style='margin-left: auto'>Refuse</button>
+
+                                    <button type="button" class='btn btn-success' data-bs-toggle='modal' 
+                                    data-bs-target="#acceptModal" 
+                                    data-id="{{i.id}}"
+                                    data-bs-url='{% url "scheduled-viewing" %}'style='margin-left: 35px'>Accept</button>
+
+                                    <input type="hidden" value='{{i.id}}' name="schedule">
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  <div class="modal fade" id="acceptModal" tabindex="-1" aria-labelledby="acceptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-success" id="acceptModalLabel">Accept</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to Accept this This Date?<br> <b> This action cannot be undone</b>.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form id="acceptForm" method="POST" style="display: inline;">
+            {% csrf_token %}
+            {% for i in schedules %}
+              <input type="hidden" value='{{i.id}}' name="schedule">
+            {% endfor %}
+            <button type="submit" name='action' value='Accept' class="btn btn-dark">Yes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="refuseModal" tabindex="-1" aria-labelledby="refuseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger" id="refuseModalLabel">Refuse</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to Refuse this This Date?<br> <b> This action cannot be undone</b>.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form id="refuseForm" method="POST" style="display: inline;">
+            {% csrf_token %}
+            {% for i in schedules %}
+              <input type="hidden" value='{{i.id}}' name="schedule">
+            {% endfor %}
+            <button type="submit" name='action' value='Refuse' class="btn btn-dark">Yes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var button = event.relatedTarget;
+    var url = button.getAttribute('data-bs-url');
+    document.getElementById('acceptModal').addEventListener('show.bs.modal', function (event) {
+      var form = document.getElementById('acceptForm');
+      form.action = url;
+    });
+    document.getElementById('refuseModal').addEventListener('show.bs.modal', function (event) {
+      var form = document.getElementById('refuseForm');
+      form.action = url;
+    });
+  </script>
+
+  </main>
+
+{% endblock body %}

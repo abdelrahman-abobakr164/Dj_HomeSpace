@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Login Cancelled
+{% endblock title %}
+
+{% block body %}
+    <section id="terms-of-service">
+        <div class="container" data-aos="fade-up">
+            <div class="tos-content" data-aos="fade-up" data-aos-delay="200">
+                <div class="row">
+                    <div class="col-12">
+                        <h2 class="fw-700 display1-size display2-md-size mb-4">Login Cancelled</h2>                        
+                        You decided to cancel logging in to our site using one of your existing accounts. If this was a mistake, please proceed to <a href="{% url 'account_login' %}">sign in</a>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock body %}
