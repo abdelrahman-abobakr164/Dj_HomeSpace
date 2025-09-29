@@ -195,13 +195,10 @@
                   <li class="page-item {% if page_obj.number ==  i %} active {% endif %}"><a class="page-link" href="?page={{i}}">{{i}}</a></li>
                 {% endfor %}
 
-                {% if page_obj.number < page_obj.paginator.num_pages %}
-                  {% if page_obj.number == custom_pagi %}
-                    <li class="page-item"><a class="page-link">...</a></li>
-                    <li class="page-item {% if page_obj.number ==  i %} active {% endif %}"><a class="page-link" href="?page={{page_obj.paginator.num_pages}}">{{page_obj.paginator.num_pages}}</a></li>
-                  {% endif %}
+                {% if group_end < total_pages %}
+                  <li class="page-item"><a class="page-link">...</a></li>
+                  <li class="page-item"><a class="page-link" href="?page={{total_pages}}">{{total_pages}}</a></li>
                 {% endif %}
-
 
                 {% if page_obj.has_next %}
                   <li class="page-item">

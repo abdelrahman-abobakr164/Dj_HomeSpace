@@ -101,6 +101,8 @@ def properties(request):
     context = {
         "all_properties": all_properties,
         "custom_pagi": custom_pagi,
+        "group_end": group_end,
+        "total_pages": total_pages,
         "page_obj": page_obj,
         "custom_page_range": custom_page_range,
     }
