@@ -33,7 +33,6 @@ def index(request):
 
 def properties(request):
     all_properties = Property.objects.all()
-    paginator = Paginator(all_properties, 2)
 
     location = request.GET.get("location")
     property_type = request.GET.get("property_type")
@@ -54,7 +53,6 @@ def properties(request):
 
     if forwhat == "for-sale":
         all_properties = all_properties.filter(Q(property_type="For Sale"))
-
     elif forwhat == "for-rent":
         all_properties = all_properties.filter(Q(property_type="For Rent"))
     else:
@@ -81,16 +79,7 @@ def properties(request):
             )
         )
 
-    if (
-        bathrooms
-        or forwhat
-        or bedrooms
-        or property_type
-        or location
-        or max_price_range
-        or min_price_range
-    ):
-        paginator = Paginator(all_properties, len(all_properties))
+    paginator = Paginator(all_properties, 1)
 
     get_page = request.GET.get("page")
     try:

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load query_string %}
 {% load humanize %}
 {% block title %} Properties {% endblock title %}
 
@@ -184,7 +185,7 @@
               <ul class="pagination justify-content-lg-end">
                 {% if page_obj.has_previous %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{page_obj.previous_page_number}}">
+                    <a class="page-link" href="?{% query_string request page=page_obj.previous_page_number %}">
                       <i class="bi bi-chevron-left"></i>
                     </a>
                   </li>
@@ -201,10 +202,10 @@
                   {% endif %}
                 {% endif %}
 
-                
+
                 {% if page_obj.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="?page={{page_obj.next_page_number}}">
+                    <a class="page-link" href="?{% query_string request page=page_obj.next_page_number %}">
                       <i class="bi bi-chevron-right"></i>
                     </a>
                   </li>

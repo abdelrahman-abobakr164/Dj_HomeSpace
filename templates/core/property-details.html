@@ -312,7 +312,7 @@
                   <h4>Similar Properties</h4>
                   {% for i in similar_properties %}
                     <div class="similar-property-item">
-                      <a href="{% url 'property' i.id %}"><img src="{% static 'assets/img/real-estate/property-exterior-4.webp' %}" class="img-fluid" alt="Similar Property">
+                      <a href="{% url 'property' i.id %}"><img src="{{i.main_image.url}}" class="img-fluid" alt="Similar Property">
                       <div class="similar-info">
                         <h6>{{ i.name }}</h6>
                         {% if i.property_type == "For Rent" %}
