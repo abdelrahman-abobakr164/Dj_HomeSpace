@@ -11,6 +11,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "update-property-availability-every-second": {
         "task": "core.tasks.update_property_availability",
-        "schedule": crontab(hour=8, minute=0),
+        "schedule": crontab(hour=6, minute=0),
     }
 }
