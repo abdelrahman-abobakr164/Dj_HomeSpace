@@ -1,3 +1,4 @@
+from django.http import QueryDict
 from django.shortcuts import render, redirect, get_object_or_404, Http404
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage
@@ -42,32 +43,46 @@ def properties(request):
     bedrooms = request.GET.get("bedrooms")
     bathrooms = request.GET.get("bathrooms")
 
+    params = request.GET.copy()
+    clean_params = QueryDict(mutable=True)
+
+    for key, value in params.items():
+        if value and value.strip():
+            clean_params[key] = value
+
+    if len(clean_params) != len(params):
+        if clean_params:
+            return redirect(f"{request.path}?{clean_params.urlencode()}")
+        else:
+            return redirect(request.path)
+
     if min_price_range:
         min_price_range = Decimal(min_price_range)
 
-    if max_price_range:
+    if clean_params.get("max_price_range"):
         max_price_range = Decimal(max_price_range)
 
-    if bathrooms:
+    if clean_params.get("bathrooms"):
         all_properties = all_properties.filter(Q(bathrooms=bathrooms))
 
-    if forwhat == "for-sale":
-        all_properties = all_properties.filter(Q(property_type="For Sale"))
-    elif forwhat == "for-rent":
-        all_properties = all_properties.filter(Q(property_type="For Rent"))
-    else:
-        all_properties = all_properties.filter(Q())
+    if clean_params.get("for"):
+        if forwhat == "for-sale":
+            all_properties = all_properties.filter(Q(property_type="For Sale"))
+        elif forwhat == "for-rent":
+            all_properties = all_properties.filter(Q(property_type="For Rent"))
+        else:
+            all_properties = all_properties.filter(Q())
 
-    if bedrooms:
+    if clean_params.get("bedrooms"):
         all_properties = all_properties.filter(Q(bedrooms=bedrooms))
 
-    if property_type:
+    if clean_params.get("property_type"):
         all_properties = all_properties.filter(Q(category__id=property_type))
 
-    if location:
+    if clean_params.get("location"):
         all_properties = all_properties.filter(Q(address__icontains=location))
 
-    if max_price_range or min_price_range:
+    if clean_params.get("min_price_range") or clean_params.get("max_price_range"):
         all_properties = all_properties.filter(
             Q(
                 price__gte=(min_price_range if min_price_range else Q()),

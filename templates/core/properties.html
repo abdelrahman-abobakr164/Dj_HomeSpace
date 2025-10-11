@@ -36,17 +36,17 @@
                     <div class="col-lg-2 col-md-6">
                       <div class="search-field">
                         <label>Location</label>
-                        <input type="text" name='location' class="form-control" placeholder="Address">
+                        <input type="text" value='{{request.GET.location}}' name='location' class="form-control" placeholder="Address">
                       </div>
                     </div>
                     
                     <div class="col-lg-2 col-md-6">
                       <div class="search-field">
                         <label>For?</label>
-                        <select class="form-select" name="for">
+                        <select onchange="this.form.submit()" class="form-select" name="for">
                           <option selected value="">All</option>
-                            <option value='for-rent'>For Rent</option>
-                            <option value='for-sale' >For Sale</option>
+                            <option {% if request.GET.for == 'for-rent' %} selected {% endif %} value='for-rent'>For Rent</option>
+                            <option value='for-sale' {% if request.GET.for == 'for-sale' %} selected {% endif %} >For Sale</option>
                         </select>
                       </div>
                     </div>
@@ -54,10 +54,10 @@
                     <div class="col-lg-2 col-md-6">
                       <div class="search-field">
                         <label>Property Type</label>
-                        <select class="form-select" name="property_type">
+                        <select onchange="this.form.submit()" class="form-select" name="property_type">
                           <option selected value="">All Types</option>
                           {% for i in categories %}
-                            <option value='{{i.id}}' >{{ i.name }}</option>
+                            <option {% if request.GET.property_type == i.id|stringformat:"s" %} selected {% endif %} value='{{i.id}}' >{{ i.name }}</option>
                           {% endfor %}
                         </select>
                       </div>
@@ -66,11 +66,13 @@
                     <div class="col-lg-2 col-md-6">
                       <div class="search-field">
                         <label>Bedrooms</label>
-                        <select class="form-select" name="bedrooms">
+                        <select onchange="this.form.submit()" class="form-select" name="bedrooms">
                           <option selected value="">All</option>
-                          {% for i in "12345" %}
-                            <option value='{{i}}' >{{ i }}</option>
-                          {% endfor %}
+                            <option value='1' {% if request.GET.bedrooms == '1' %} selected {% endif %} >1</option>
+                            <option value='2' {% if request.GET.bedrooms == '2' %} selected {% endif %} >2</option>
+                            <option value='3' {% if request.GET.bedrooms == '3' %} selected {% endif %} >3</option>
+                            <option value='4' {% if request.GET.bedrooms == '4' %} selected {% endif %} >4</option>
+                            <option value='5' {% if request.GET.bedrooms == '5' %} selected {% endif %} >5</option>
                         </select>
                       </div>
                     </div>
@@ -78,11 +80,13 @@
                     <div class="col-lg-2 col-md-6">
                       <div class="search-field">
                         <label>Bathrooms</label>
-                        <select class="form-select" name="bathrooms">
+                        <select onchange="this.form.submit()" class="form-select" name="bathrooms">
                           <option selected value="">All</option>
-                          {% for i in "12345" %}
-                            <option value='{{i}}' >{{ i }}</option>
-                          {% endfor %}
+                            <option value='1' {% if request.GET.bathrooms == '1' %} selected {% endif %} >1</option>
+                            <option value='2' {% if request.GET.bathrooms == '2' %} selected {% endif %} >2</option>
+                            <option value='3' {% if request.GET.bathrooms == '3' %} selected {% endif %} >3</option>
+                            <option value='4' {% if request.GET.bathrooms == '4' %} selected {% endif %} >4</option>
+                            <option value='5' {% if request.GET.bathrooms == '5' %} selected {% endif %} >5</option>
                         </select>
                       </div>
                     </div>
