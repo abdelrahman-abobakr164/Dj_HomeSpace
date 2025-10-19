@@ -31,41 +31,41 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-10">
                         <div class="search-wrapper">
-                            <form method='GET'>
-                                <div class="row g-3">
-                                    <div class="col-lg-5 col-md-6">
-                                        <div class="search-field">
-                                            <label>STATUS</label>
-                                            <select class="form-select" name="status">
-                                                <option selected value="">All</option>
-                                                <option value="Pending">Pending</option>
-                                                <option value="Accepted">Accepted</option>
-                                                <option value="Refused" >Refused</option>
-                                            </select>
-                                        </div>
+                          <form>
+                            <div class="row g-3">
+                                <div class="col-lg-5 col-md-6">
+                                    <div class="search-field">
+                                        <label>STATUS</label>
+                                        <select onchange="this.form.submit()" class="form-select" name="status">
+                                            <option selected value="">All</option>
+                                            <option {% if request.GET.status == "Pending"  %} selected {% endif %} value="Pending">Pending</option>
+                                            <option {% if request.GET.status == "Accepted"  %} selected {% endif %} value="Accepted">Accepted</option>
+                                            <option {% if request.GET.status == "Refused"  %} selected {% endif %} value="Refused" >Refused</option>
+                                        </select>
                                     </div>
-
-                                    <div class="col-lg-5 col-md-6">
-                                        <div class="search-field">
-                                            <label>DATE</label>
-                                            <select class="form-select" name="date">
-                                                <option selected value="">All</option>
-                                                {% for i in schedules %}
-                                                    <option value='{{i.schedule_date|date:"o-m-d"}}' >{{ i.schedule_date|date:'M d' }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-2 col-md-12">
-                                        <div class="filter-field">
-                                            <label>&nbsp;</label>
-                                            <button class="btn btn-primary w-100 filter-btn"><i class="bi bi-search"></i> FILTER</button>
-                                        </div>
-                                    </div>
-
                                 </div>
-                            </form>
+
+                                <div class="col-lg-5 col-md-6">
+                                    <div class="search-field">
+                                        <label>DATE</label>
+                                        <select onchange="this.form.submit()" class="form-select" name="date">
+                                            <option selected value="">All</option>
+                                            {% for i in filter_by_dates %}
+                                              <option {% if request.GET.date == i|stringformat:"s"  %} selected {% endif %} value='{{i|date:"o-m-d"}}'>{{ i }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-2 col-md-12">
+                                    <div class="filter-field">
+                                        <label>&nbsp;</label>
+                                        <button class="btn btn-primary w-100 filter-btn"><i class="bi bi-search"></i> FILTER</button>
+                                    </div>
+                                </div>
+
+                            </div>
+                          </form>
                         </div>
                     </div>
                 </div>
@@ -104,6 +104,8 @@
                                     <input type="hidden" value='{{i.id}}' name="schedule">
                                 </form>
                             </td>
+                            {% empty %}
+                            <td class='text-center' colspan='5'><h3>You Don't Have Scheduled Dates</h3></td>
                         </tr>
                     </tbody>
                 {% endfor %}

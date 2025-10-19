@@ -94,7 +94,9 @@ class PhoneForm(forms.ModelForm):
 
 
 class PropertyForm(forms.ModelForm):
-    available_at = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    available_at = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", min: date.today().isoformat()})
+    )
 
     class Meta:
         model = Property

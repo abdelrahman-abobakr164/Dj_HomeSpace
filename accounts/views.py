@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.conf import settings
+from django.http import QueryDict
 from django.utils import timezone
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -39,13 +40,42 @@ def contact_us(request):
 def scheduled_viewing(request):
     today = timezone.now().date()
     schedules = Schedule.objects.filter(
-        receiver=request.user, status="Pending", schedule_date__gte=today
+        receiver=request.user,
+        status="Pending",
+        schedule_date__gte=today,
     ).order_by("schedule_date")
+    filter_by_dates = (
+        (
+            Schedule.objects.filter(sender=request.user)
+            .values_list("schedule_date", flat=True)
+            .distinct()
+        ).order_by("schedule_date")
+        if schedules
+        else None
+    )
 
     date = request.GET.get("date")
     status = request.GET.get("status")
     action = request.POST.get("action")
     schedule_id = request.POST.get("schedule")
+
+    params = request.GET.copy()
+    clean_params = QueryDict(mutable=True)
+    for key, value in params.items():
+        if value and value.strip():
+            clean_params[key] = value
+
+    if len(clean_params) != len(params):
+        if clean_params:
+            return redirect(f"{request.path}?{clean_params.urlencode()}")
+        else:
+            return redirect(request.path)
+
+    if clean_params.get("date"):
+        schedules = schedules.filter(Q(schedule_date=date))
+
+    if clean_params.get("status"):
+        schedules = schedules.filter(Q(status=status))
 
     if request.method == "POST":
         try:
@@ -81,30 +111,52 @@ def scheduled_viewing(request):
 
         return redirect("scheduled-viewing")
 
-    if date:
-        schedules = schedules.filter(Q(schedule_date=date))
-
-    if status:
-        schedules = schedules.filter(Q(status=status))
-
-    context = {"schedules": schedules}
+    context = {
+        "filter_by_dates": filter_by_dates,
+        "schedules": schedules,
+    }
     return render(request, "accounts/scheduled_viewing.html", context)
 
 
 @login_required
 def dates(request):
     schedules = Schedule.objects.filter(sender=request.user).order_by("schedule_date")
+    filter_by_dates = (
+        (
+            Schedule.objects.filter(sender=request.user)
+            .values_list("schedule_date", flat=True)
+            .distinct()
+        ).order_by("schedule_date")
+        if schedules
+        else None
+    )
 
     date = request.GET.get("date")
     status = request.GET.get("status")
 
-    if date:
+    params = request.GET.copy()
+    clean_params = QueryDict(mutable=True)
+
+    for key, value in params.items():
+        if value and value.strip():
+            clean_params[key] = value
+
+    if len(clean_params) != len(params):
+        if clean_params:
+            return redirect(f"{request.path}?{clean_params.urlencode()}")
+        else:
+            return redirect(f"{request.path}")
+
+    if clean_params.get("date"):
         schedules = schedules.filter(Q(schedule_date=date))
 
-    if status:
+    if clean_params.get("status"):
         schedules = schedules.filter(Q(status=status))
 
-    context = {"schedules": schedules}
+    context = {
+        "schedules": schedules,
+        "filter_by_dates": filter_by_dates,
+    }
     return render(request, "accounts/dates.html", context)
 
 
