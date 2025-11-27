@@ -7,20 +7,24 @@ from django.conf import settings
 from django.db.models import Q
 from decimal import Decimal
 
-from core.models import *
 from core.forms import *
-from django.contrib.auth import get_user_model
+from core.models import *
 from core.tasks import sendemails_to_users
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
 
 def index(request):
-    premium = Property.objects.filter(Q(meter__gte=5000))[:1]
-    rental = Property.objects.filter(Q(rent__gte=2000))[:2]
-    disproperties = Property.objects.filter(discount_price__gte=1000000)[:1]
-    allproperties = Property.objects.filter(price__gte=100000)[:1]
-    properties = Property.objects.all()
+    premium = Property.objects.filter(Q(meter__gte=5000)).select_related("category")[:1]
+    rental = Property.objects.filter(Q(rent__gte=2000)).select_related("category")[:2]
+    disproperties = Property.objects.filter(discount_price__gte=1000000).select_related(
+        "category"
+    )[:1]
+    allproperties = Property.objects.filter(price__gte=100000).select_related(
+        "category"
+    )[:1]
+    properties = Property.objects.all().select_related("category")
 
     context = {
         "rental": rental,
@@ -33,7 +37,7 @@ def index(request):
 
 
 def properties(request):
-    all_properties = Property.objects.all()
+    all_properties = Property.objects.select_related("category")
 
     location = request.GET.get("location")
     property_type = request.GET.get("property_type")
@@ -63,24 +67,36 @@ def properties(request):
         max_price_range = Decimal(max_price_range)
 
     if clean_params.get("bathrooms"):
-        all_properties = all_properties.filter(Q(bathrooms=bathrooms))
+        all_properties = all_properties.filter(Q(bathrooms=bathrooms)).select_related(
+            "category"
+        )
 
     if clean_params.get("for"):
         if forwhat == "for-sale":
-            all_properties = all_properties.filter(Q(property_type="For Sale"))
+            all_properties = all_properties.filter(
+                Q(property_type="For Sale")
+            ).select_related("category")
         elif forwhat == "for-rent":
-            all_properties = all_properties.filter(Q(property_type="For Rent"))
+            all_properties = all_properties.filter(
+                Q(property_type="For Rent")
+            ).select_related("category")
         else:
             all_properties = all_properties.filter(Q())
 
     if clean_params.get("bedrooms"):
-        all_properties = all_properties.filter(Q(bedrooms=bedrooms))
+        all_properties = all_properties.filter(Q(bedrooms=bedrooms)).select_related(
+            "category"
+        )
 
     if clean_params.get("property_type"):
-        all_properties = all_properties.filter(Q(category__id=property_type))
+        all_properties = all_properties.filter(
+            Q(category__id=property_type)
+        ).select_related("category")
 
     if clean_params.get("location"):
-        all_properties = all_properties.filter(Q(address__icontains=location))
+        all_properties = all_properties.filter(
+            Q(address__icontains=location)
+        ).select_related("category")
 
     if clean_params.get("min_price_range") or clean_params.get("max_price_range"):
         all_properties = all_properties.filter(
@@ -92,7 +108,7 @@ def properties(request):
                 rent__gte=(min_price_range if min_price_range else Q()),
                 rent__lte=(max_price_range if max_price_range else Q()),
             )
-        )
+        ).select_related("category")
 
     paginator = Paginator(all_properties, 1)
 
@@ -125,7 +141,11 @@ def properties(request):
 
 
 def property_detail(request, id):
-    get_property = get_object_or_404(Property, id=id)
+    get_property = (
+        Property.objects.select_related("agent")
+        .prefetch_related("gallaries", "interior_features", "building_amenities")
+        .get(id=id)
+    )
     similar_properties = Property.objects.filter(
         Q(rent__lte=get_property.rent if get_property.rent else Q())
         | Q(price__lte=get_property.price if get_property.price else Q())
@@ -166,7 +186,11 @@ def add_property(request, username):
             save.agent = user
             save.property_type = "For Rent" if form.cleaned_data["rent"] else "For Sale"
             save.save()
-            GetCreatedProperty = Property.objects.filter(agent=request.user).last()
+            GetCreatedProperty = (
+                Property.objects.filter(agent=request.user)
+                .select_related("agent")
+                .last()
+            )
             if PropertyImage:
                 for file in PropertyImage:
                     file_name = str(file.name)
@@ -192,9 +216,10 @@ def add_property(request, username):
 
 @login_required
 def property_update(request, id):
-    get_property = get_object_or_404(Property, id=id)
+    get_property = Property.objects.prefetch_related(
+        "interior_features", "building_amenities"
+    ).get(id=id)
     if request.user == get_property.agent:
-        form = PropertyForm(instance=get_property)
         if request.method == "POST":
             form = PropertyForm(request.POST, request.FILES, instance=get_property)
             PropertyImage = request.FILES.getlist("images")

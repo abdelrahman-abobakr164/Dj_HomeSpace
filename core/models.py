@@ -82,7 +82,6 @@ class Property(models.Model):
     meter = models.DecimalField(
         decimal_places=0, max_digits=7, validators=[MinValueValidator(0)]
     )
-
     interior_features = models.ManyToManyField("InteriorFeatures", blank=True)
     building_amenities = models.ManyToManyField("BuildingAmenities", blank=True)
     category = models.ForeignKey(("Category"), on_delete=models.CASCADE)

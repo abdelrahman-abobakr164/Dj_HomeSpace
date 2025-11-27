@@ -5,9 +5,9 @@ from django.utils import timezone
 from django.contrib import messages
 from django.core.mail import send_mail
 from core.tasks import sendemails_to_users
+from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render, redirect
 
 
 from core.models import Schedule
@@ -39,14 +39,21 @@ def contact_us(request):
 @login_required
 def scheduled_viewing(request):
     today = timezone.now().date()
-    schedules = Schedule.objects.filter(
-        receiver=request.user,
-        status="Pending",
-        schedule_date__gte=today,
-    ).order_by("schedule_date")
+    schedules = (
+        Schedule.objects.filter(
+            receiver=request.user,
+            status="Pending",
+            schedule_date__gte=today,
+        )
+        .select_related("sender", "receiver", "properties")
+        .order_by("schedule_date")
+    )
     filter_by_dates = (
         (
-            Schedule.objects.filter(sender=request.user)
+            Schedule.objects.filter(
+                sender=request.user, status="Pending", schedule_date__gte=today
+            )
+            .select_related("sender", "receiver", "properties")
             .values_list("schedule_date", flat=True)
             .distinct()
         ).order_by("schedule_date")
@@ -72,14 +79,18 @@ def scheduled_viewing(request):
             return redirect(request.path)
 
     if clean_params.get("date"):
-        schedules = schedules.filter(Q(schedule_date=date))
+        schedules = schedules.filter(Q(schedule_date=date)).select_related(
+            "sender", "receiver", "properties"
+        )
 
     if clean_params.get("status"):
-        schedules = schedules.filter(Q(status=status))
+        schedules = schedules.filter(Q(status=status)).select_related(
+            "sender", "receiver", "properties"
+        )
 
     if request.method == "POST":
         try:
-            schedule = get_object_or_404(Schedule, id=schedule_id, status="Pending")
+            schedule = Schedule.objects.get(id=schedule_id, status="Pending")
             if schedule.schedule_date > today:
                 if action == "Refuse":
                     schedule.status = "Refused"
@@ -120,10 +131,18 @@ def scheduled_viewing(request):
 
 @login_required
 def dates(request):
-    schedules = Schedule.objects.filter(sender=request.user).order_by("schedule_date")
+    today = timezone.now().date()
+    schedules = (
+        Schedule.objects.filter(sender=request.user)
+        .select_related("sender", "receiver", "properties")
+        .order_by("schedule_date")
+    )
     filter_by_dates = (
         (
-            Schedule.objects.filter(sender=request.user)
+            Schedule.objects.filter(
+                sender=request.user, status="Pending", schedule_date__gte=today
+            )
+            .select_related("sender", "receiver", "properties")
             .values_list("schedule_date", flat=True)
             .distinct()
         ).order_by("schedule_date")
@@ -148,10 +167,14 @@ def dates(request):
             return redirect(f"{request.path}")
 
     if clean_params.get("date"):
-        schedules = schedules.filter(Q(schedule_date=date))
+        schedules = schedules.filter(Q(schedule_date=date)).select_related(
+            "sender", "receiver", "properties"
+        )
 
     if clean_params.get("status"):
-        schedules = schedules.filter(Q(status=status))
+        schedules = schedules.filter(Q(status=status)).select_related(
+            "sender", "receiver", "properties"
+        )
 
     context = {
         "schedules": schedules,
@@ -173,3 +196,22 @@ def my_account(request):
     else:
         form = UserSettings(instance=user)
     return render(request, "accounts/my_account.html", {"profile": user, "form": form})
+
+
+def contact_us(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        message = request.POST.get("message")
+        Contact.objects.create(email=email, message=message)
+        send_mail(
+            subject="HomeSpace Contact-us",
+            from_email=email,
+            message=message,
+            recipient_list=[settings.EMAIL_HOST_USER],
+        )
+        messages.success(
+            request,
+            f"Thank You For Contacting Us We Will Respond to you Very Soon In Shaa Allah.",
+        )
+        return redirect("contact-us")
+    return render(request, "accounts/contact.html")
