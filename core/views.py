@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404, Http404
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage
+from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+from django.core.cache import cache
+from django.db import transaction
 from django.http import QueryDict
 from django.conf import settings
 from django.db.models import Q
@@ -141,11 +144,15 @@ def properties(request):
 
 
 def property_detail(request, id):
-    get_property = (
-        Property.objects.select_related("agent")
-        .prefetch_related("gallaries", "interior_features", "building_amenities")
-        .get(id=id)
-    )
+    cache_key = f"Property{id}"
+    get_property = cache.get(cache_key)
+    if not get_property:
+        get_property = (
+            Property.objects.select_related("agent")
+            .prefetch_related("gallaries", "interior_features", "building_amenities")
+            .get(id=id)
+        )
+        cache.set(cache_key, get_property, timeout=60 * 15)
     similar_properties = Property.objects.filter(
         Q(rent__lte=get_property.rent if get_property.rent else Q())
         | Q(price__lte=get_property.price if get_property.price else Q())
@@ -165,111 +172,105 @@ def property_detail(request, id):
 @login_required
 def add_property(request, username):
     user = get_object_or_404(User, username=username)
+    if request.user != user:
+        raise PermissionDenied
     if not user.phone:
-        phoneform = PhoneForm(instance=user)
+        phoneform = PhoneForm(
+            request.POST if request.method == "POST" else None, instance=user
+        )
+        if request.method == "POST" and phoneform.is_valid():
+            phoneform.save()
+            return redirect("add-property", username=user.username)
         if request.method == "POST":
-            phoneform = PhoneForm(request.POST, instance=user)
-            if phoneform.is_valid():
-                phoneform.save()
-                return redirect("add-property", username=user.username)
-            messages.error(request, f"{phoneform.errors}")
+            messages.error(request, "Please Provide a valid phone number")
         return render(request, "core/add_phone.html", {"form": phoneform})
 
     if request.method == "POST":
-
-        PropertyImage = request.FILES.getlist("images")
+        images = request.FILES.getlist("images")
         form = PropertyForm(request.POST, request.FILES)
-        extensions = ["JPG", "jpg", "png", "PNG", "webp"]
 
         if form.is_valid():
-            save = form.save(commit=False)
-            save.agent = user
-            save.property_type = "For Rent" if form.cleaned_data["rent"] else "For Sale"
-            save.save()
-            GetCreatedProperty = (
-                Property.objects.filter(agent=request.user)
-                .select_related("agent")
-                .last()
-            )
-            if PropertyImage:
-                for file in PropertyImage:
-                    file_name = str(file.name)
-                    file_extension = (
-                        file_name.split(".")[-1] if "." in file_name else ""
+            try:
+                with transaction.atomic():
+                    form_save = form.save(commit=False)
+                    form_save.agent = user
+                    form_save.property_type = (
+                        "For Rent" if form.cleaned_data["rent"] else "For Sale"
                     )
-                    if file_extension in extensions:
-                        Gallary.objects.create(property=GetCreatedProperty, images=file)
-                    else:
-                        messages.error(
-                            request, f"the file {file_extension} is not supported"
-                        )
-                        return redirect("property", id=GetCreatedProperty.id)
-            messages.success(request, "Your Property has been Published Successfully")
-            return redirect("property", id=GetCreatedProperty.id)
-
+                    form_save.save()
+                    if images:
+                        property_image(request, images, form_save.id)
+                messages.success(request, "Your Property has been listed successfully!")
+            except Exception:
+                messages.error(request, "Somthing Went Wrong. Please Try Again")
         else:
-            messages.error(request, f"{form.errors}")
-
-    context = {"get_property": None, "form": PropertyForm()}
+            messages.error(request, f"Please correct the errors in the form.")
+    else:
+        form = PropertyForm()
+    context = {"get_property": None, "form": form}
     return render(request, "core/property_form.html", context)
 
 
 @login_required
 def property_update(request, id):
-    get_property = Property.objects.prefetch_related(
-        "interior_features", "building_amenities"
-    ).get(id=id)
-    if request.user == get_property.agent:
-        if request.method == "POST":
-            form = PropertyForm(request.POST, request.FILES, instance=get_property)
-            PropertyImage = request.FILES.getlist("images")
-            extensions = ["JPG", "jpg", "png", "PNG", "webp"]
+    get_property = get_object_or_404(
+        Property.objects.prefetch_related("interior_features", "building_amenities"),
+        id=id,
+    )
+    if request.user != get_property.agent:
+        raise PermissionDenied
+    if request.method == "POST":
+        form = PropertyForm(request.POST, request.FILES, instance=get_property)
+        images = request.FILES.getlist("images")
 
-            if form.is_valid():
-                save = form.save(commit=False)
-                save.property_type = (
-                    "For Rent" if form.cleaned_data["rent"] else "For Sale"
-                )
-                save.save()
-                if PropertyImage:
-                    for file in PropertyImage:
-                        file_name = str(file.name)
-                        file_extension = (
-                            file_name.split(".")[-1] if "." in file_name else ""
-                        )
-                        if file_extension in extensions:
-                            Gallary.objects.update_or_create(
-                                property=get_property, images=file
-                            )
-                        else:
-                            messages.error(
-                                request, f"the file {file_extension} is not supported"
-                            )
-                            return redirect("property_update", id=get_property.id)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    form_save = form.save(commit=False)
+                    form_save.property_type = (
+                        "For Rent" if form.cleaned_data["rent"] else "For Sale"
+                    )
+                    form_save.save()
+                    if images:
+                        property_image(request, images, get_property.id)
+                    messages.success(
+                        request, "Your Property Has Been Updated Successfully"
+                    )
+                    return redirect("property", id=get_property.id)
+            except Exception:
+                messages.error(request, "Somthing Went Wrong. Please Try Again")
 
-                messages.success(request, "Your Property Has Been Updated Successfully")
-                return redirect("property", id=get_property.id)
-            else:
-                messages.error(request, f"{form.errors}")
+        else:
+            messages.error(request, f"Please correct the errors in the form.")
 
-        return render(
-            request,
-            "core/property_form.html",
-            {"form": form, "get_property": get_property},
-        )
-    else:
-        return redirect("property", id=get_property.id)
+    return render(
+        request,
+        "core/property_form.html",
+        {"form": form, "get_property": get_property},
+    )
+
+
+def property_image(request, images, property_id):
+    ALLOWED_EXTENSION = ["JPG", "jpg", "png", "PNG", "webp"]
+    gallery_objects = []
+    for file in images:
+        file_name = str(file.name)
+        file_extension = file_name.split(".")[-1] if "." in file_name else ""
+        if file_extension not in ALLOWED_EXTENSION:
+            messages.error(request, f"the file {file_extension} is not supported")
+            return redirect("property_update", id=property_id.id)
+        gallery_objects.append(Gallery(property=property_id, images=file))
+    Gallery.objects.bulk_create(gallery_objects)
 
 
 @login_required
 def property_delete(request, id):
     get_property = get_object_or_404(Property, id=id)
-    if request.user == get_property.agent:
-        get_property.delete()
-        messages.success(request, "Your Property Has Been Deleted Successfully!")
-        return redirect("properties")
-    else:
-        return redirect("property", id=get_property.id)
+    if request.user != get_property.agent:
+        raise PermissionDenied
+    get_property.delete()
+    messages.success(request, "Your Property Has Been Deleted Successfully!")
+    return redirect("properties")
 
 
 def services(request):
@@ -302,7 +303,7 @@ def service_detail(request, slug):
                 )
                 return redirect(request.META.get("HTTP_REFERER"))
             else:
-                messages.error(request, f"{form.errors}")
+                messages.error(request, f"Please correct the errors in the form.")
     else:
         messages.error(request, "Wrong Service.")
         return redirect("services")
@@ -320,27 +321,35 @@ def contact_agent(request, id):
             request.POST, user=user if request.user.is_authenticated else None
         )
         if form.is_valid():
-            if form.cleaned_data.get("phone"):
-                user.phone = form.cleaned_data.get("phone")
-                user.save()
-            save_form = form.save(commit=False)
-            save_form.sender = user
-            save_form.receiver = pro.agent
-            save_form.properties_id = pro.id
-            save_form.save()
+            try:
+                with transaction.atomic():
+                    phone = form.cleaned_data.get("phone")
 
-            subject = form.cleaned_data["subject"]
-            message = form.cleaned_data.get("message")
-            sendemails_to_users.delay(
-                subject=subject,
-                message=f"{user} \n Wanna {subject} \n Send You a: \n {message}. \n For Your Property {url}",
-                from_email=user.email,
-                recipient_list=pro.agent.email,
-            )
+                    if phone:
+                        user.phone = phone
+                        user.save()
+                    save_form = form.save(commit=False)
+                    save_form.sender = user
+                    save_form.receiver = pro.agent
+                    save_form.properties_id = pro.id
+                    save_form.save()
 
-            messages.success(request, f"The Message Has been Sented Successfully!")
+                message = form.cleaned_data.get("message")
+                subject = form.cleaned_data["subject"]
+                transaction.on_commit(
+                    lambda: sendemails_to_users.delay(
+                        subject=subject,
+                        message=f"{user} \n Wanna {subject} \n Send You a: \n {message}. \n For Your Property {url}",
+                        from_email=user.email,
+                        recipient_list=pro.agent.email,
+                    )
+                )
+
+                messages.success(request, f"Your Message Has been Sent Successfully!")
+            except Exception:
+                messages.error(request, "Somthing Went Wrong Please Try Again.")
         else:
-            messages.error(request, form.errors.as_text())
+            messages.error(request, "Please correct the errors in the form")
         return redirect(url)
 
     else:

@@ -5,7 +5,6 @@ from django.core.mail import EmailMessage
 from core.models import Property, Schedule
 
 
-@shared_task
 def update_property_availability():
     today = date.today()
     Property.objects.filter(available_at__lte=today, available=False).update(

@@ -4,8 +4,8 @@ from .models import *
 # Register your models here.
 
 
-class GallaryInline(admin.TabularInline):
-    model = Gallary
+class GalleryInline(admin.TabularInline):
+    model = Gallery
     extra = 1
 
 
@@ -37,7 +37,7 @@ class PropertyAdmin(admin.ModelAdmin):
         "meter",
         "available",
     ]
-    inlines = (GallaryInline, ScheduleInline)
+    inlines = (GalleryInline, ScheduleInline)
     list_editable = ("available",)
     list_per_page = 30
 
@@ -60,7 +60,7 @@ class ScheduleAdmin(admin.ModelAdmin):
 
 admin.site.register(Property, PropertyAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
-admin.site.register(Gallary)
+admin.site.register(Gallery)
 admin.site.register(Category)
 admin.site.register(InteriorFeatures)
 admin.site.register(BuildingAmenities)

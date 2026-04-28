@@ -77,8 +77,8 @@ class Property(models.Model):
         null=True,
         validators=[MinValueValidator(0)],
     )
-    bathrooms = models.PositiveIntegerField()
-    bedrooms = models.PositiveIntegerField()
+    bathrooms = models.PositiveIntegerField(db_index=True)
+    bedrooms = models.PositiveIntegerField(db_index=True)
     meter = models.DecimalField(
         decimal_places=0, max_digits=7, validators=[MinValueValidator(0)]
     )
@@ -88,7 +88,9 @@ class Property(models.Model):
     available_at = models.DateField(auto_now_add=False, blank=True, null=True)
     published_at = models.DateTimeField(auto_now_add=datetime.now())
     available = models.BooleanField(default=False)
-    property_type = models.CharField(max_length=100, choices=PROPERTY_FOR)
+    property_type = models.CharField(
+        max_length=100, choices=PROPERTY_FOR, db_index=True
+    )
     slug = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
@@ -162,11 +164,11 @@ class Category(models.Model):
         return self.name
 
 
-class Gallary(models.Model):
+class Gallery(models.Model):
     property = models.ForeignKey(
         Property, on_delete=models.CASCADE, related_name="gallaries"
     )
-    images = models.FileField(upload_to="Properites_Gallary/", null=True, blank=True)
+    images = models.FileField(upload_to="Properites_Gallery/", null=True, blank=True)
 
     def __str__(self):
         return self.property.name

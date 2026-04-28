@@ -1,7 +1,8 @@
-from django.db.models import Q
 from django.conf import settings
 from django.http import QueryDict
 from django.utils import timezone
+from django.db.models import Q, F
+from django.db import transaction
 from django.contrib import messages
 from django.core.mail import send_mail
 from core.tasks import sendemails_to_users
@@ -56,7 +57,7 @@ def scheduled_viewing(request):
             .select_related("sender", "receiver", "properties")
             .values_list("schedule_date", flat=True)
             .distinct()
-        ).order_by("schedule_date")
+        ).order_by(F("schedule_date"))
         if schedules
         else None
     )
@@ -90,32 +91,38 @@ def scheduled_viewing(request):
 
     if request.method == "POST":
         try:
-            schedule = Schedule.objects.get(id=schedule_id, status="Pending")
-            if schedule.schedule_date > today:
-                if action == "Refuse":
-                    schedule.status = "Refused"
-                    schedule.save()
-                    sendemails_to_users.delay(
-                        f"{schedule.subject} Is Refused",
-                        f"Your {schedule.subject} For {schedule.properties.name} On {schedule.schedule_date} Is Refused",
-                        schedule.receiver.email,
-                        schedule.sender.email,
-                    )
-                    messages.success(request, "The Schedule Date is Refused")
-                elif action == "Accept":
-                    schedule.status = "Accepted"
-                    schedule.save()
-                    sendemails_to_users.delay(
-                        f"{schedule.subject} Is Accepted",
-                        f"Your {schedule.subject} For {schedule.properties.name} On {schedule.schedule_date} Is Accepted",
-                        schedule.receiver.email,
-                        schedule.sender.email,
-                    )
-                    messages.success(request, "The Schedule Date is Accepted")
+            with transaction.atomic():
+                schedule = Schedule.objects.get(id=schedule_id, status="Pending")
+                if schedule.schedule_date > today:
+                    if action == "Refuse":
+                        schedule.status = "Refused"
+                        schedule.save()
+                        transaction.on_commit(
+                            lambda: sendemails_to_users.delay(
+                                f"{schedule.subject} Is Refused",
+                                f"Your {schedule.subject} For {schedule.properties.name} On {schedule.schedule_date} Is Refused",
+                                schedule.receiver.email,
+                                schedule.sender.email,
+                            )
+                        )
+                        messages.success(request, "The Schedule Date is Refused")
+                    elif action == "Accept":
+                        schedule.status = "Accepted"
+                        schedule.save()
+                        transaction.on_commit(
+                            lambda: sendemails_to_users.delay(
+                                f"{schedule.subject} Is Accepted",
+                                f"Your {schedule.subject} For {schedule.properties.name} On {schedule.schedule_date} Is Accepted",
+                                schedule.receiver.email,
+                                schedule.sender.email,
+                            )
+                        )
+
+                        messages.success(request, "The Schedule Date is Accepted")
+                    else:
+                        messages.error(request, "Don't Mess")
                 else:
-                    messages.error(request, "Don't Mess")
-            else:
-                messages.error(request, "The Date is Passed, It's Too Late")
+                    messages.error(request, "The Date is Passed, It's Too Late")
 
         except Schedule.DoesNotExist:
             messages.error(request, "Don't Mess")
@@ -192,7 +199,7 @@ def my_account(request):
             form.save()
             return redirect("my-account")
         else:
-            messages.error(request, f"{form.errors}")
+            messages.error(request, f"Please correct the errors in the form.")
     else:
         form = UserSettings(instance=user)
     return render(request, "accounts/my_account.html", {"profile": user, "form": form})
