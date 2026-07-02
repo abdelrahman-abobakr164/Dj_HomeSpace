@@ -13,6 +13,6 @@ app.conf.timezone = "Africa/Cairo"
 app.conf.beat_schedule = {
     "update-property-availability": {
         "task": "core.tasks.update_property_availability",
-        "schedule": crontab(hour=6, minute=0),
+        "schedule": crontab(minute=0),
     }
 }
