@@ -1,14 +1,16 @@
 from .models import Category, Schedule
-from datetime import date
+from django.utils import timezone
+
 
 def categoryfilter(request):
     categories = Category.objects.all()
-    DatesCount = (
-        Schedule.objects.filter(receiver=request.user, schedule_date__gte=date.today()).count()
-        if request.user.is_authenticated
-        else 0
-    )
-    return {
-        "DatesCount": DatesCount,
-        "categories": categories,
-    }
+    context = {"categories": categories}
+    if request.user.is_authenticated:
+        DatesCount = Schedule.objects.filter(
+            receiver=request.user,
+            status="Pending",
+            schedule_date__gte=timezone.now().date(),
+        ).count()
+        context["DatesCount"] = DatesCount
+
+    return context
