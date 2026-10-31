@@ -2,18 +2,18 @@ from django.shortcuts import render, redirect, get_object_or_404, Http404
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth import get_user_model
+from django.db.models import Q, QuerySet
 from django.contrib import messages
 from django.core.cache import cache
 from django.db import transaction
-from django.http import QueryDict
 from django.conf import settings
-from django.db.models import Q
 from decimal import Decimal
 
 from core.forms import *
 from core.models import *
 from core.tasks import sendemails_to_users
-from django.contrib.auth import get_user_model
+from accounts.utils import redirect_without_blank_params
 
 User = get_user_model()
 
@@ -40,80 +40,14 @@ def index(request):
 
 
 def properties(request):
+    if response := redirect_without_blank_params(request):
+        return response
+
     all_properties = Property.objects.select_related("category")
 
-    location = request.GET.get("location")
-    property_type = request.GET.get("property_type")
-    min_price_range = request.GET.get("min_price_range")
-    max_price_range = request.GET.get("max_price_range")
-    forwhat = request.GET.get("for")
-    bedrooms = request.GET.get("bedrooms")
-    bathrooms = request.GET.get("bathrooms")
+    all_properties = properties_filter(request, all_properties)
 
-    params = request.GET.copy()
-    clean_params = QueryDict(mutable=True)
-
-    for key, value in params.items():
-        if value and value.strip():
-            clean_params[key] = value
-
-    if len(clean_params) != len(params):
-        if clean_params:
-            return redirect(f"{request.path}?{clean_params.urlencode()}")
-        else:
-            return redirect(request.path)
-
-    if min_price_range:
-        min_price_range = Decimal(min_price_range)
-
-    if clean_params.get("max_price_range"):
-        max_price_range = Decimal(max_price_range)
-
-    if clean_params.get("bathrooms"):
-        all_properties = all_properties.filter(Q(bathrooms=bathrooms)).select_related(
-            "category"
-        )
-
-    if clean_params.get("for"):
-        if forwhat == "for-sale":
-            all_properties = all_properties.filter(
-                Q(property_type="For Sale")
-            ).select_related("category")
-        elif forwhat == "for-rent":
-            all_properties = all_properties.filter(
-                Q(property_type="For Rent")
-            ).select_related("category")
-        else:
-            all_properties = all_properties.filter(Q())
-
-    if clean_params.get("bedrooms"):
-        all_properties = all_properties.filter(Q(bedrooms=bedrooms)).select_related(
-            "category"
-        )
-
-    if clean_params.get("property_type"):
-        all_properties = all_properties.filter(
-            Q(category__id=property_type)
-        ).select_related("category")
-
-    if clean_params.get("location"):
-        all_properties = all_properties.filter(
-            Q(address__icontains=location)
-        ).select_related("category")
-
-    if clean_params.get("min_price_range") or clean_params.get("max_price_range"):
-        all_properties = all_properties.filter(
-            Q(
-                price__gte=(min_price_range if min_price_range else Q()),
-                price__lte=(max_price_range if max_price_range else Q()),
-            )
-            | Q(
-                rent__gte=(min_price_range if min_price_range else Q()),
-                rent__lte=(max_price_range if max_price_range else Q()),
-            )
-        ).select_related("category")
-
-    paginator = Paginator(all_properties, 1)
+    paginator = Paginator(all_properties, 2)
 
     get_page = request.GET.get("page")
     try:
@@ -355,6 +289,50 @@ def contact_agent(request, id):
     else:
         messages.error(request, f"Wrong Method.")
         return redirect(url)
+
+
+def properties_filter(request, queryset):
+    form = PropertyFilter(request.GET)
+    if not form.is_valid():
+        return queryset
+
+    data = form.cleaned_data
+
+    exact_filters = {
+        "bathrooms": data.get("bathrooms"),
+        "bedrooms": data.get("bedrooms"),
+        "property_type": data.get("property_type"),
+        "category": data.get("category"),
+    }
+
+    queryset = queryset.filter(
+        **{
+            field: value
+            for field, value in exact_filters.items()
+            if value not in (None, "")
+        }
+    )
+
+    min_price = data.get("min_price")
+    max_price = data.get("max_price")
+
+    if min_price is not None or max_price is not None:
+        price_range, rent_range = {}, {}
+
+        if min_price is not None:
+            price_range["price__gte"] = min_price
+            rent_range["rent__gte"] = min_price
+
+        if max_price is not None:
+            price_range["price__lte"] = max_price
+            rent_range["rent__lte"] = max_price
+
+        queryset = queryset.filter(Q(**price_range) | Q(**rent_range))
+
+    if address := data.get("address"):
+        queryset = queryset.filter(address__icontains=address)
+
+    return queryset
 
 
 def privacy(request):

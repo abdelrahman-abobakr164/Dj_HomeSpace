@@ -93,6 +93,46 @@ class PhoneForm(forms.ModelForm):
         self.fields["phone"].widget.attrs["class"] = "form-control"
 
 
+class PropertyFilter(forms.Form):
+    address = forms.CharField(required=False)
+    property_for = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "Any"),
+            ("For Rent", "For Rent"),
+            ("For Sale", "For Sale"),
+        ],
+    )
+    min_price = forms.DecimalField(required=False, min_value=0)
+    max_price = forms.DecimalField(required=False, min_value=0)
+    bathrooms = forms.ChoiceField(
+        required=False, choices=[("", "Any")] + [(i, str(i)) for i in range(1, 6)]
+    )
+    bedrooms = forms.ChoiceField(
+        required=False, choices=[("", "Any")] + [(i, str(i)) for i in range(1, 6)]
+    )
+    property_type = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "Any"),
+            ("House", "House"),
+            ("Apartment", "Apartment"),
+            ("Villa", "Villa"),
+            ("Compound", "Compound"),
+        ],
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        min_price, max_price = cleaned.get("min_price"), cleaned.get("max_price")
+
+        if min_price and max_price and min_price > max_price:
+            raise forms.ValidationError(
+                "Minimum price cannot be greater than maximum price."
+            )
+        return cleaned
+
+
 class PropertyForm(forms.ModelForm):
     available_at = forms.DateField(
         widget=forms.DateInput(attrs={"type": "date", min: date.today().isoformat()})

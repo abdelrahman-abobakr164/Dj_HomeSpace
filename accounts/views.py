@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from core.tasks import sendemails_to_users
 from django.contrib.auth import get_user_model
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -25,19 +26,14 @@ User = get_user_model()
 def scheduled_viewing(request):
     today = timezone.now().date()
 
-    schedules = Schedule.objects.filter(
+    base_qs = Schedule.objects.filter(
         receiver=request.user, status="Pending", schedule_date__gte=today
-    ).select_related("properties")
-
-    filter_by_dates = (
-        Schedule.objects.filter(
-            receiver=request.user, status="Pending", schedule_date__gte=today
-        )
-        .values_list("schedule_date", flat=True)
-        .distinct()
     )
+    schedules = base_qs.select_related("properties")
+    filter_by_dates = base_qs.values_list("schedule_date", flat=True).distinct()
 
     form = ScheduleFilterForm(request.GET)
+
     if form.is_valid():
         if date := form.cleaned_data["date"]:
             schedules = schedules.filter(schedule_date=date)
@@ -57,15 +53,9 @@ def dates(request):
     if response := redirect_without_blank_params(request):
         return response
 
-    schedules = Schedule.objects.filter(sender=request.user).select_related(
-        "properties"
-    )
-
-    filter_by_dates = (
-        Schedule.objects.filter(sender=request.user)
-        .values_list("schedule_date", flat=True)
-        .distinct()
-    )
+    base_qs = Schedule.objects.filter(sender=request.user)
+    schedules = base_qs.select_related("properties")
+    filter_by_dates = base_qs.values_list("schedule_date", flat=True).distinct()
 
     form = ScheduleFilterForm(request.GET)
     if form.is_valid():
@@ -117,39 +107,52 @@ def contact_us(request):
     return render(request, "accounts/contact.html")
 
 
+DECISIONS = {
+    "Accept": "Accepted",
+    "Refuse": "Refused",
+}
+
+
+@login_required
+@require_POST
 def date_dicision(request, action, schedule_id):
-    today = timezone.now().date()
-    schedule = get_object_or_404(Schedule, id=schedule_id, status="Pending")
+    new_status = DECISIONS.get(action)
+    if new_status is None:
+        messages.error(request, "Invalid action.")
+        return redirect("scheduled-viewing")
+
     with transaction.atomic():
-        if schedule.schedule_date >= today:
-            if action == "Refuse":
-                schedule.status = "Refused"
-                schedule.save()
-                transaction.on_commit(
-                    lambda: sendemails_to_users.delay(
-                        f"{schedule.subject} Is Refused",
-                        f"Your {schedule.subject} For {schedule.properties.name} On {schedule.schedule_date} Is Refused",
-                        schedule.receiver.email,
-                        schedule.sender.email,
-                    )
-                )
-                messages.success(request, "The Schedule Date is Refused")
-            elif action == "Accept":
-                schedule.status = "Accepted"
-                schedule.save()
-                transaction.on_commit(
-                    lambda: sendemails_to_users.delay(
-                        f"{schedule.subject} Is Accepted",
-                        f"Your {schedule.subject} For {schedule.properties.name} On {schedule.schedule_date} Is Accepted",
-                        schedule.receiver.email,
-                        schedule.sender.email,
-                    )
-                )
+        schedule = get_object_or_404(
+            Schedule.objects.select_for_update(of=("self",)).select_related(
+                "sender",
+                "receiver",
+                "properties",
+            ),
+            id=schedule_id,
+            receiver=request.user,
+            status="Pending",
+        )
+        
+        if schedule.schedule_date < timezone.localdate():
+            messages.error(request, "This date has passed, it's too late.")
+            return redirect("scheduled-viewing")
 
-                messages.success(request, "The Schedule Date is Accepted")
-            else:
-                messages.error(request, "Don't Mess")
-        else:
-            messages.error(request, "The Date is Passed, It's Too Late")
+        schedule.status = new_status
+        schedule.save(update_fields=["status"])
 
+        subject = f"{schedule.subject} Is {new_status}"
+        body = (
+            f"Your {schedule.subject} For {schedule.properties.name} "
+            f"On {schedule.schedule_date} Is {new_status}"
+        )
+        transaction.on_commit(
+            lambda: sendemails_to_users.delay(
+                subject,
+                body,
+                schedule.receiver.email,
+                schedule.sender.email,
+            )
+        )
+
+    messages.success(request, f"The schedule date is {new_status.lower()}.")
     return redirect("scheduled-viewing")

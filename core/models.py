@@ -88,7 +88,7 @@ class Property(models.Model):
     available_at = models.DateField(auto_now_add=False, blank=True, null=True)
     published_at = models.DateTimeField(auto_now_add=datetime.now())
     available = models.BooleanField(default=False)
-    property_type = models.CharField(
+    property_for = models.CharField(
         max_length=100, choices=PROPERTY_FOR, db_index=True
     )
     slug = models.CharField(max_length=100, blank=True, null=True)
